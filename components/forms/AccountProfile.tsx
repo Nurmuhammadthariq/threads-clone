@@ -23,6 +23,7 @@ import { useUploadThing } from '@/lib/uploadThing'
 import { isBase64Image } from '@/lib/utils'
 
 import { UserValidation } from '@/lib/validations/user'
+import { updateUser } from '@/lib/actions/user.actions'
 
 interface Props {
   user: {
@@ -55,16 +56,31 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
 
   const onSubmit = async (values: z.infer<typeof UserValidation>) => {
     const blob = values.profile_photo
-    
+
     const hasImagedChanged = isBase64Image(blob)
-    
+
     if (hasImagedChanged) {
       const imgRes = await startUpload(files)
       console.log(imgRes)
 
-      // if(imgRes && imgRes[0].fileUrl) {
-      //   values.
-      // }
+      if (imgRes && imgRes[0].fileUrl) {
+        values.profile_photo = imgRes[0].fileUrl;
+      }
+    }
+
+    await updateUser({
+      userId: user.id,
+      username: values.username,
+      name: values.name,
+      bio: values.bio,
+      image: values.profile_photo,
+      path: pathname,
+    })
+
+    if (pathname === '/profile/edit') {
+      router.back()
+    } else {
+      router.push('/')
     }
   }
 
@@ -95,7 +111,7 @@ const AccountProfile = ({ user, btnTitle }: Props) => {
 
   return (
     <Form {...form}>
-      <form 
+      <form
         className='flex flex-col justify-start gap-10'
         onSubmit={form.handleSubmit(onSubmit)}
       >
